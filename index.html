@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beat The Box</title>
+  <style>
+    body { font-family: 'Quicksand', sans-serif; background: #f6f5f3; color: #333; text-align: center; margin: 0; }
+    h1 { font-family: 'Noto Serif JP', serif; color: #556b2f; }
+    #game { display: flex; flex-direction: column; align-items: center; margin: 20px; }
+    #deck-info { margin: 10px; font-size: 1.2em; }
+    #grid { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 10px; margin: 20px; }
+    .card { width: 80px; height: 120px; border: 2px solid #333; border-radius: 10px; background: white;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5em; }
+    #controls { margin-top: 20px; }
+    button { margin: 5px; padding: 10px 20px; border: none; border-radius: 8px; background: #556b2f; color: white; font-size: 1em; }
+    button:hover { background: #6b8e23; cursor: pointer; }
+    #banner { margin-top: 20px; font-size: 1.3em; }
+  </style>
+</head>
+<body>
+  <h1>Beat The Box</h1>
+  <div id="game">
+    <div id="deck-info">Cards remaining: <span id="remaining">52</span></div>
+    <div id="grid"></div>
+    <div id="controls">
+      <button onclick="guess('higher')">Higher</button>
+      <button onclick="guess('lower')">Lower</button>
+      <button onclick="guess('same')">Same</button>
+    </div>
+    <div id="banner"></div>
+  </div>
+<script>
+  const suits = ['♠','♥','♦','♣'];
+  let deck = [], piles = [], remaining = 52, banner = document.getElementById('banner');
+  function initDeck() {
+    deck = [];
+    for (let s of suits) for (let v=1; v<=13; v++) deck.push({val:v, suit:s});
+    deck = deck.sort(() => Math.random() - 0.5);
+    remaining = deck.length;
+    document.getElementById('remaining').innerText = remaining;
+  }
+  function initGrid() {
+    piles = [];
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for (let i=0; i<9; i++) {
+      let c = deck.pop(); remaining--;
+      piles.push({card:c, active:true});
+      let div = document.createElement('div');
+      div.className = 'card'; div.id = 'pile-'+i;
+      div.innerText = renderCard(c);
+      grid.appendChild(div);
+    }
+    document.getElementById('remaining').innerText = remaining;
+  }
+  function renderCard(c) {
+    let v = c.val;
+    if (v===1) v='A'; if (v===11) v='J'; if (v===12) v='Q'; if (v===13) v='K';
+    return v + c.suit;
+  }
+  function guess(type) {
+    if (remaining<=0) return;
+    let newCard = deck.pop(); remaining--;
+    document.getElementById('remaining').innerText = remaining;
+    let pile = piles.find(p=>p.active);
+    if (!pile) return;
+    let old = pile.card;
+    let correct=false;
+    if (type==='higher' && newCard.val>old.val) correct=true;
+    if (type==='lower' && newCard.val<old.val) correct=true;
+    if (type==='same' && newCard.val===old.val) { correct=true; revivePile(); banner.innerText='😎 PERFECT MATCH!'; }
+    pile.card = newCard;
+    document.getElementById('pile-0').innerText = renderCard(newCard);
+    if (!correct) { pile.active=false; banner.innerText='❌ Wrong!'; }
+  }
+  function revivePile() {
+    let flipped = piles.find(p=>!p.active);
+    if (flipped) { flipped.active=true; document.getElementById('pile-0').style.opacity=1; }
+  }
+  initDeck(); initGrid();
+</script>
+</body>
+</html>
